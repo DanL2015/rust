@@ -82,8 +82,8 @@ impl World {
 
     //Generates a uniformly random 21x21 square of tiles (from coords -10 to 10 in both directions)
     pub fn random_load_debug(&mut self) {
-        for i in -10..10 {
-            for j in -10..10 {
+        for i in -5..5 {
+            for j in -5..5 {
                 let id = self.random_tile_id();
                 self.world.insert((i, j), id);
             }
@@ -91,10 +91,11 @@ impl World {
     }
 
     pub fn print_debug(&self) {
+        println!("{}", self.world.get(&(0, 0)).unwrap().clone());
         for i in -10..10 {
             for j in -10..10 {
-                if self.world.contains_key(&(i, j)) {
-                    print!("{}", self.world.get(&(i, j)).unwrap().clone());
+                if self.world.contains_key(&(j, i)) {
+                    print!("{}", self.world.get(&(j, i)).unwrap().clone());
                 }
                 else {
                     print!("-");

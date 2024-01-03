@@ -5,7 +5,7 @@ use crate::world::world::{World, Tile};
 pub struct Renderer {
     pub screen_area: Rect,  //Rect that stores screen height and width
     pub clear_color: Color, //Color on clear (set to black anyway)
-    pub tile_size: u32,     //Size of tile rendering on screen
+    pub tile_size: i32,     //Size of tile rendering on screen
 }
 
 impl Renderer {
@@ -23,6 +23,7 @@ impl Renderer {
         let _ = canvas.fill_rect(self.screen_area);
     }
 
+    // Note: Idk if this works right or not, did the calculations in my head
     pub fn render(&self, canvas: &mut Canvas<Window>, world: &mut World) {
         self.clear(canvas);
 
@@ -31,33 +32,32 @@ impl Renderer {
         let sh = self.screen_area.height();
 
         // Todo: change this when implementing player struct
-        let p: (f64, f64) = (0.0, 0.0);
+        // Absolute position of player on the map
+        let p: (f64, f64) = (-200.0, -200.0);
+
         // player position translated to tiles and rounded (what tile the player is currently on)
         let pt: (i32, i32) = (
-            (p.0 * self.tile_size as f64).floor() as i32,
-            (p.1 * self.tile_size as f64).floor() as i32,
+            (p.0 as f64 / self.tile_size as f64).ceil() as i32,
+            (p.1 as f64 / self.tile_size as f64).ceil() as i32,
         );
+
         // player relative position on the current player tile
         let prt: (f64, f64) = (
-            (p.0 * self.tile_size as f64 - pt.0 as f64),
-            (p.1 * self.tile_size as f64 - pt.1 as f64),
+            ((pt.0 * self.tile_size) as f64 - p.0 as f64),
+            ((pt.1 * self.tile_size) as f64 - p.1 as f64),
         );
 
         // screen offset when rendering tiles
         let so: (i32, i32) = (
-            ((prt.0 * sw as f64).floor() as i32),
-            ((prt.1 * sh as f64).floor() as i32),
+            (prt.0.floor() as i32),
+            (prt.1.floor() as i32),
         );
 
-        let hx = ((sw / self.tile_size) / 2) as i32;
-        let hy = ((sh / self.tile_size) / 2) as i32;
+        let hx = (sw as i32 / self.tile_size) / 2;
+        let hy = (sh as i32 / self.tile_size) / 2;
 
-        let x = (pt.0 - hx - 1, pt.0 + hx + 2); // tuple representing range of rendering in x direction
-        let y = (pt.1 - hy - 1, pt.1 + hy + 2); // tuple representing range of rendering in y direction
-
-        // println!("{}, {}", x.0, x.1);
-        // println!("{}, {}", y.0, y.1);
-        // println!("{}, {}", so.0, so.1);
+        let x = (pt.0 - hx - 1, pt.0 + hx + 1); // tuple representing range of rendering in x direction
+        let y = (pt.1 - hy - 1, pt.1 + hy + 1); // tuple representing range of rendering in y direction
 
         for i in y.0..y.1 {
             for j in x.0..x.1 {
@@ -68,12 +68,16 @@ impl Renderer {
                     tid = -1;
                 }
                 let t: &Tile = world.tiles.get(&tid).unwrap();
-                // println!("x: {}, y: {}", so.0 + (j - x.0) * self.tile_size as i32, so.1 + (i - y.0) * self.tile_size as i32);
-                let t_rect: Rect = Rect::new(so.0 + (j - x.0) * self.tile_size as i32, so.1 + (i - y.0) * self.tile_size as i32, self.tile_size, self.tile_size);
+                let t_rect: Rect = Rect::new(so.0 + (j - x.0 - 1) * self.tile_size as i32, so.1 + (i - y.0 - 1) * self.tile_size as i32, self.tile_size as u32, self.tile_size as u32);
                 canvas.set_draw_color(t.color);
                 let _ = canvas.fill_rect(t_rect);
             }
         }
+
+        //temporary draw player at 0, 0
+        let p_rect: Rect = Rect::new((sw / 2 - 25) as i32, (sh / 2 - 25) as i32, 50, 50);
+        canvas.set_draw_color(Color::BLACK);
+        let _ = canvas.fill_rect(p_rect);
 
         canvas.present();
     }
