@@ -1,4 +1,4 @@
-2D Zombie Game
+2D Zombie Game with Rust and SDL2
 1. World Generation
   - Randomly generated cities/roads/houses/forests with loot
   - Special blocks for crafting, cooking, etc
@@ -17,3 +17,6 @@
 4. Enemies
   - Spawn in groups, generated with world
   - Attraction to noise
+
+
+Directory Structure
