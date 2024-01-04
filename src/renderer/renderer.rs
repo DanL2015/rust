@@ -23,6 +23,14 @@ impl Renderer {
         let _ = canvas.fill_rect(self.screen_area);
     }
 
+    pub fn draw_player(&self, canvas: &mut Canvas<Window>, world: &mut World) {
+        let sw = self.screen_area.width();
+        let sh = self.screen_area.height();
+        let p_rect: Rect = Rect::new((sw / 2 - world.player.size.0 / 2) as i32, (sh / 2 - world.player.size.1 / 2) as i32, world.player.size.0, world.player.size.1);
+        canvas.set_draw_color(world.player.color);
+        let _ = canvas.fill_rect(p_rect);
+    }
+
     // Note: Idk if this works right or not, did the calculations in my head
     pub fn render(&self, canvas: &mut Canvas<Window>, world: &mut World) {
         self.clear(canvas);
@@ -33,7 +41,7 @@ impl Renderer {
 
         // Todo: change this when implementing player struct
         // Absolute position of player on the map
-        let p: (f64, f64) = (-200.0, -200.0);
+        let p: (f64, f64) = world.player.pos;
 
         // player position translated to tiles and rounded (what tile the player is currently on)
         let pt: (i32, i32) = (
@@ -74,10 +82,7 @@ impl Renderer {
             }
         }
 
-        //temporary draw player at 0, 0
-        let p_rect: Rect = Rect::new((sw / 2 - 25) as i32, (sh / 2 - 25) as i32, 50, 50);
-        canvas.set_draw_color(Color::BLACK);
-        let _ = canvas.fill_rect(p_rect);
+        self.draw_player(canvas, world);
 
         canvas.present();
     }

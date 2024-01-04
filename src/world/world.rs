@@ -1,7 +1,8 @@
 use std::collections::HashMap;
-
 use rand::{Rng, rngs::ThreadRng};
 use sdl2::pixels::Color;
+
+use crate::player::player::Player;
 
 //One world tile
 pub struct Tile {
@@ -17,6 +18,7 @@ pub struct World {
     pub world: HashMap<(i32, i32), i32>, //Stores rendered tiles (by id)
     pub tiles: HashMap<i32, Tile>,       //Stores all tiles based on id (0..n)
     pub rng: ThreadRng,
+    pub player: Player,
 }
 
 fn init_tiles(tiles: &mut HashMap<i32, Tile>) {
@@ -63,7 +65,7 @@ fn init_tiles(tiles: &mut HashMap<i32, Tile>) {
 }
 
 impl World {
-    pub fn new() -> Self {
+    pub fn new(player: Player) -> Self {
         let mut tiles = HashMap::new();
         init_tiles(&mut tiles);
 
@@ -71,6 +73,7 @@ impl World {
             world: HashMap::new(),
             tiles: tiles,
             rng: rand::thread_rng(),
+            player: player,
         };
     }
 
@@ -81,9 +84,9 @@ impl World {
     }
 
     //Generates a uniformly random 21x21 square of tiles (from coords -10 to 10 in both directions)
-    pub fn random_load_debug(&mut self) {
-        for i in -5..5 {
-            for j in -5..5 {
+    pub fn random_load_debug(&mut self, x: (i32, i32), y: (i32, i32)) {
+        for i in x.0..x.1 {
+            for j in y.0..y.1 {
                 let id = self.random_tile_id();
                 self.world.insert((i, j), id);
             }
