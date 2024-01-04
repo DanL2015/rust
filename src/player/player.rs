@@ -34,6 +34,15 @@ impl Player {
 
         let dir = vec![(0, 1), (0, -1), (1, 0), (-1, 0), (0, 0)];
 
+        // let ptid: i32;
+        // if world.contains_key(&pt) {
+        //     ptid = world.get(&pt).unwrap().clone();
+        // } else {
+        //     ptid = -1;
+        // }
+        // let ptile: &Tile = tiles.get(&ptid).unwrap();
+        // println!("{}", ptile.name);
+
         for d in dir {
             let n: (i32, i32) = (pt.0 + d.0, pt.1 + d.1);
             let tid: i32;

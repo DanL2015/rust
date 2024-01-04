@@ -1,6 +1,14 @@
-use sdl2::{pixels::Color, rect::Rect, render::Canvas, video::Window};
+use std::path::Path;
 
-use crate::world::world::{World, Tile};
+use sdl2::{
+    pixels::Color,
+    rect::Rect,
+    render::{Canvas, TextureCreator},
+    ttf::Font,
+    video::{Window, WindowContext},
+};
+
+use crate::world::world::{Tile, World};
 
 pub struct Renderer {
     pub screen_area: Rect,  //Rect that stores screen height and width
@@ -23,16 +31,46 @@ impl Renderer {
         let _ = canvas.fill_rect(self.screen_area);
     }
 
+    pub fn draw_text(
+        &self,
+        canvas: &mut Canvas<Window>,
+        font: &sdl2::ttf::Font,
+        color: Color,
+        text: String,
+        texture_creator: &TextureCreator<WindowContext>,
+        x: i32,
+        y: i32,
+    ) {
+        let surface = font.render(&text).blended(color).unwrap();
+        let texture = texture_creator
+            .create_texture_from_surface(&surface)
+            .unwrap();
+        let target = Rect::new(x, y, surface.width(), surface.height());
+
+        let _ = canvas.copy(&texture, None, target);
+    }
+
     pub fn draw_player(&self, canvas: &mut Canvas<Window>, world: &mut World) {
         let sw = self.screen_area.width();
         let sh = self.screen_area.height();
-        let p_rect: Rect = Rect::new((sw / 2 - world.player.size.0 / 2) as i32, (sh / 2 - world.player.size.1 / 2) as i32, world.player.size.0, world.player.size.1);
+        let p_rect: Rect = Rect::new(
+            (sw / 2 - world.player.size.0 / 2) as i32,
+            (sh / 2 - world.player.size.1 / 2) as i32,
+            world.player.size.0,
+            world.player.size.1,
+        );
         canvas.set_draw_color(world.player.color);
         let _ = canvas.fill_rect(p_rect);
     }
 
     // Note: Idk if this works right or not, did the calculations in my head
-    pub fn render(&self, canvas: &mut Canvas<Window>, world: &mut World) {
+    pub fn render(
+        &self,
+        canvas: &mut Canvas<Window>,
+        world: &mut World,
+        font: &sdl2::ttf::Font,
+        texture_creator: &TextureCreator<WindowContext>,
+    ) {
         self.clear(canvas);
 
         // For now, assume the world is centered at 0, 0 (later will be centered on player)
@@ -56,10 +94,7 @@ impl Renderer {
         );
 
         // screen offset when rendering tiles
-        let so: (i32, i32) = (
-            (prt.0.floor() as i32),
-            (prt.1.floor() as i32),
-        );
+        let so: (i32, i32) = ((prt.0.floor() as i32), (prt.1.floor() as i32));
 
         let hx = (sw as i32 / self.tile_size) / 2;
         let hy = (sh as i32 / self.tile_size) / 2;
@@ -74,13 +109,27 @@ impl Renderer {
                 }
                 let tid: i32 = world.world.get(&(j, i)).unwrap().clone();
                 let t: &Tile = world.tiles.get(&tid).unwrap();
-                let t_rect: Rect = Rect::new(so.0 + (j - x.0 - 1) * self.tile_size as i32, so.1 + (i - y.0 - 1) * self.tile_size as i32, self.tile_size as u32, self.tile_size as u32);
+                let t_rect: Rect = Rect::new(
+                    so.0 + (j - x.0 - 1) * self.tile_size as i32,
+                    so.1 + (i - y.0 - 1) * self.tile_size as i32,
+                    self.tile_size as u32,
+                    self.tile_size as u32,
+                );
                 canvas.set_draw_color(t.color);
                 let _ = canvas.fill_rect(t_rect);
             }
         }
 
         self.draw_player(canvas, world);
+        self.draw_text(
+            canvas,
+            font,
+            Color::BLACK,
+            "Test draw".to_string(),
+            texture_creator,
+            0,
+            0,
+        );
 
         canvas.present();
     }

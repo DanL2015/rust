@@ -8,4 +8,8 @@ edition = "2021"
 [dependencies]
 noise = "0.8.2"
 rand = "0.8.5"
-sdl2 = "0.36.0"
+
+[dependencies.sdl2]
+version = "0.36"
+default-features = false
+features = ["ttf","image","gfx","mixer"]

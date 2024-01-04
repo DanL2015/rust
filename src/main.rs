@@ -1,5 +1,5 @@
 extern crate sdl2;
-use std::collections::HashSet;
+use std::{collections::HashSet, path::Path};
 
 use sdl2::{event::Event, keyboard::Keycode};
 
@@ -15,28 +15,32 @@ pub fn main() {
 
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
+    let ttf_context = sdl2::ttf::init().map_err(|e| e.to_string()).unwrap();
 
-    let window = video_subsystem.window("Rust Game", screen_area.0, screen_area.1)
+    let window = video_subsystem
+        .window("Rust Game", screen_area.0, screen_area.1)
         .position_centered()
         .build()
         .unwrap();
 
     let mut canvas = window.into_canvas().build().unwrap();
 
-    let mut running = true;
-    let mut event_queue = sdl_context.event_pump().unwrap();
-
     let mut world = World::new(Player::new());
     world.gen((-100, 100), (-100, 100)); //initial world generation around the player
     world.print_debug();
     let mut render = Renderer::new(screen_area.0, screen_area.1);
+    let mut texture_creator = canvas.texture_creator();
+    let font_path: &Path = Path::new(&"assets/fonts/vcr_osd_mono.ttf");
+    let mut font = ttf_context.load_font(font_path, 32).unwrap();
 
     let mut keys_pressed: HashSet<Keycode> = HashSet::new();
+    let mut running = true;
+    let mut event_queue = sdl_context.event_pump().unwrap();
 
     while running {
         for event in event_queue.poll_iter() {
             match event {
-                Event::Quit{ .. } => {
+                Event::Quit { .. } => {
                     running = false;
                 }
                 Event::KeyDown { keycode, .. } => {
@@ -49,8 +53,9 @@ pub fn main() {
             }
         }
         //Game loop
-        world.player.input(&keys_pressed, &world.world, &world.tiles, render.tile_size);
-        render.render(&mut canvas, &mut world);
+        world
+            .player
+            .input(&keys_pressed, &world.world, &world.tiles, render.tile_size);
+        render.render(&mut canvas, &mut world, &font, &texture_creator);
     }
-
 }
