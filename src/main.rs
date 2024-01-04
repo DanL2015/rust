@@ -27,7 +27,7 @@ pub fn main() {
     let mut event_queue = sdl_context.event_pump().unwrap();
 
     let mut world = World::new(Player::new());
-    world.random_load_debug((-2, 2), (-2, 2));
+    world.gen((-100, 100), (-100, 100)); //initial world generation around the player
     world.print_debug();
     let mut render = Renderer::new(screen_area.0, screen_area.1);
 
@@ -49,8 +49,8 @@ pub fn main() {
             }
         }
         //Game loop
-            render.render(&mut canvas, &mut world);
-        world.player.input(&keys_pressed, &world.world, &world.tiles, render.tile_size, &mut canvas);
+        world.player.input(&keys_pressed, &world.world, &world.tiles, render.tile_size);
+        render.render(&mut canvas, &mut world);
     }
 
 }

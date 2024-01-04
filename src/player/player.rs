@@ -1,7 +1,7 @@
-use sdl2::{keyboard::Keycode, pixels::Color, rect::Rect, render::Canvas, video::Window};
+use sdl2::{keyboard::Keycode, pixels::Color, render::Canvas, video::Window};
 use std::collections::{HashMap, HashSet};
 
-use crate::world::world::{Tile, World};
+use crate::world::world::Tile;
 
 pub struct Player {
     pub pos: (f64, f64),
@@ -25,7 +25,6 @@ impl Player {
         world: &HashMap<(i32, i32), i32>,
         tiles: &HashMap<i32, Tile>,
         tile_size: i32,
-        canvas: &mut Canvas<Window>,
     ) -> bool {
         // player position translated to tiles and rounded (what tile the player is currently on)
         let pt: (i32, i32) = (
@@ -77,11 +76,10 @@ impl Player {
         world: &HashMap<(i32, i32), i32>,
         tiles: &HashMap<i32, Tile>,
         tile_size: i32,
-        canvas: &mut Canvas<Window>,
     ) {
         self.pos.0 += delta.0 * self.mv_mult;
         self.pos.1 += delta.1 * self.mv_mult;
-        if self.collision(world, tiles, tile_size, canvas) {
+        if self.collision(world, tiles, tile_size) {
             self.pos.0 -= delta.0 * self.mv_mult;
             self.pos.1 -= delta.1 * self.mv_mult;
         }
@@ -94,19 +92,18 @@ impl Player {
         world: &HashMap<(i32, i32), i32>,
         tiles: &HashMap<i32, Tile>,
         tile_size: i32,
-        canvas: &mut Canvas<Window>,
     ) {
         if keys_pressed.get(&Keycode::W).is_some() {
-            self.mv((0.0, -1.0), world, tiles, tile_size, canvas);
+            self.mv((0.0, -1.0), world, tiles, tile_size);
         }
         if keys_pressed.get(&Keycode::S).is_some() {
-            self.mv((0.0, 1.0), world, tiles, tile_size, canvas);
+            self.mv((0.0, 1.0), world, tiles, tile_size);
         }
         if keys_pressed.get(&Keycode::A).is_some() {
-            self.mv((-1.0, 0.0), world, tiles, tile_size, canvas);
+            self.mv((-1.0, 0.0), world, tiles, tile_size);
         }
         if keys_pressed.get(&Keycode::D).is_some() {
-            self.mv((1.0, 0.0), world, tiles, tile_size, canvas);
+            self.mv((1.0, 0.0), world, tiles, tile_size);
         }
     }
 }

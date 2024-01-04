@@ -69,12 +69,10 @@ impl Renderer {
 
         for i in y.0..y.1 {
             for j in x.0..x.1 {
-                let tid: i32;
-                if world.world.contains_key(&(j, i)) {
-                    tid = world.world.get(&(j, i)).unwrap().clone();
-                } else {
-                    tid = -1;
+                if !world.world.contains_key(&(j, i)) {
+                    world.generate_tile(j, i);
                 }
+                let tid: i32 = world.world.get(&(j, i)).unwrap().clone();
                 let t: &Tile = world.tiles.get(&tid).unwrap();
                 let t_rect: Rect = Rect::new(so.0 + (j - x.0 - 1) * self.tile_size as i32, so.1 + (i - y.0 - 1) * self.tile_size as i32, self.tile_size as u32, self.tile_size as u32);
                 canvas.set_draw_color(t.color);
