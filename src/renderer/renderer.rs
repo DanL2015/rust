@@ -45,8 +45,8 @@ impl Renderer {
 
         // player position translated to tiles and rounded (what tile the player is currently on)
         let pt: (i32, i32) = (
-            (p.0 as f64 / self.tile_size as f64).ceil() as i32,
-            (p.1 as f64 / self.tile_size as f64).ceil() as i32,
+            (p.0 as f64 / self.tile_size as f64).floor() as i32,
+            (p.1 as f64 / self.tile_size as f64).floor() as i32,
         );
 
         // player relative position on the current player tile

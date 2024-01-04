@@ -77,6 +77,10 @@ impl World {
         };
     }
 
+    pub fn collide(&self) -> bool {
+        return false;
+    }
+
     //Generates a random tile id from the tilemap
     pub fn random_tile_id(&mut self) -> i32 {
         let id: i32 = self.rng.gen_range(0..(self.tiles.len() as i32 - 1));

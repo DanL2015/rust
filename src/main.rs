@@ -1,7 +1,7 @@
 extern crate sdl2;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
-use sdl2::{event::Event, keyboard::{KeyboardState, Keycode}};
+use sdl2::{event::Event, keyboard::Keycode};
 
 mod world;
 use world::world::World;
@@ -27,7 +27,8 @@ pub fn main() {
     let mut event_queue = sdl_context.event_pump().unwrap();
 
     let mut world = World::new(Player::new());
-    world.random_load_debug((-100, 100), (-100, 100));
+    world.random_load_debug((-2, 2), (-2, 2));
+    world.print_debug();
     let mut render = Renderer::new(screen_area.0, screen_area.1);
 
     let mut keys_pressed: HashSet<Keycode> = HashSet::new();
@@ -47,10 +48,9 @@ pub fn main() {
                 _ => {}
             }
         }
-        world.player.input(&keys_pressed);
-        
         //Game loop
-        render.render(&mut canvas, &mut world);
+            render.render(&mut canvas, &mut world);
+        world.player.input(&keys_pressed, &world.world, &world.tiles, render.tile_size, &mut canvas);
     }
 
 }
