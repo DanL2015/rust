@@ -8,20 +8,37 @@ use sdl2::{
     video::{Window, WindowContext},
 };
 
-use crate::world::world::{Tile, World};
+use crate::gui::gui::Gui;
+use crate::{
+    gui::gui::Gui_Window,
+    world::world::{Tile, World},
+};
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Align {
+    LEFT,
+    CENTER,
+    RIGHT,
+}
 
 pub struct Renderer {
     pub screen_area: Rect,  //Rect that stores screen height and width
     pub clear_color: Color, //Color on clear (set to black anyway)
     pub tile_size: i32,     //Size of tile rendering on screen
+    pub gui: Gui,
 }
 
 impl Renderer {
     pub fn new(width: u32, height: u32) -> Self {
+        let mut gui = Gui::new();
+        gui.draw_stack
+            .push(Gui_Window::new((0, 0), "".to_string(), Align::LEFT));
+
         Self {
             screen_area: Rect::new(0, 0, width, height),
             clear_color: Color::RGB(0, 0, 0),
             tile_size: 50,
+            gui: gui,
         }
     }
 
@@ -37,15 +54,32 @@ impl Renderer {
         font: &sdl2::ttf::Font,
         color: Color,
         text: String,
-        texture_creator: &TextureCreator<WindowContext>,
-        x: i32,
-        y: i32,
+        pos: (i32, i32),
+        align: Align,
     ) {
         let surface = font.render(&text).blended(color).unwrap();
+        let texture_creator = canvas.texture_creator();
         let texture = texture_creator
             .create_texture_from_surface(&surface)
             .unwrap();
-        let target = Rect::new(x, y, surface.width(), surface.height());
+        let target: Rect;
+        if align == Align::LEFT {
+            target = Rect::new(pos.0, pos.1, surface.width(), surface.height());
+        } else if align == Align::CENTER {
+            target = Rect::new(
+                pos.0 - surface.width() as i32 / 2,
+                pos.1 - surface.height() as i32 / 2,
+                surface.width(),
+                surface.height(),
+            );
+        } else {
+            target = Rect::new(
+                pos.0 - surface.width() as i32,
+                pos.1 - surface.height() as i32,
+                surface.width(),
+                surface.height(),
+            );
+        }
 
         let _ = canvas.copy(&texture, None, target);
     }
@@ -65,11 +99,12 @@ impl Renderer {
 
     // Note: Idk if this works right or not, did the calculations in my head
     pub fn render(
-        &self,
+        &mut self,
         canvas: &mut Canvas<Window>,
         world: &mut World,
         font: &sdl2::ttf::Font,
         texture_creator: &TextureCreator<WindowContext>,
+        m_coords: (i32, i32),
     ) {
         self.clear(canvas);
 
@@ -121,16 +156,12 @@ impl Renderer {
         }
 
         self.draw_player(canvas, world);
-        self.draw_text(
-            canvas,
-            font,
-            Color::BLACK,
-            "Test draw".to_string(),
-            texture_creator,
-            0,
-            0,
-        );
-
+        let m_tile = world
+            .tiles
+            .get(&world.get_tile_id_from_rel(m_coords, &self))
+            .unwrap();
+        self.gui.draw_stack[0].text = m_tile.name.clone();
+        self.gui.draw_windows(&self, canvas, font);
         canvas.present();
     }
 }

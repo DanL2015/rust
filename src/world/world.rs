@@ -1,9 +1,9 @@
 use noise::{NoiseFn, Perlin};
 use rand::{rngs::ThreadRng, Rng};
-use sdl2::pixels::Color;
+use sdl2::{pixels::Color, render};
 use std::collections::HashMap;
 
-use crate::player::player::Player;
+use crate::{player::player::Player, renderer::renderer::Renderer};
 
 //One world tile
 pub struct Tile {
@@ -112,6 +112,44 @@ impl World {
         return val;
     }
 
+    // Gets absolute world coords from relative coords (on screen) using player position
+    pub fn get_abs_from_rel(&self, rel_pos: (i32, i32), renderer: &Renderer) -> (i32, i32) {
+
+        let hx = (renderer.screen_area.w as i32 / renderer.tile_size) / 2;
+        let hy = (renderer.screen_area.h as i32 / renderer.tile_size) / 2;
+
+        let p = self.player.pos;
+
+        // player position translated to tiles and rounded (what tile the player is currently on)
+        let pt: (i32, i32) = (
+            (p.0 as f64 / renderer.tile_size as f64).floor() as i32,
+            (p.1 as f64 / renderer.tile_size as f64).floor() as i32,
+        );
+
+        // player relative position on the current player tile
+        let prt: (f64, f64) = (
+            ((pt.0 * renderer.tile_size) as f64 - p.0 as f64),
+            ((pt.1 * renderer.tile_size) as f64 - p.1 as f64),
+        );
+
+        // screen offset when rendering tiles
+        let so: (i32, i32) = ((prt.0.floor() as i32), (prt.1.floor() as i32));
+
+        // relative tile position
+        let rt = ((rel_pos.0 - so.0) / renderer.tile_size, (rel_pos.1 - so.1) / renderer.tile_size);
+
+        // get absolute world coords
+        return (pt.0 + rt.0 - hx, pt.1 + rt.1 - hy);
+    }
+
+    // Gets tile id from relative position
+    pub fn get_tile_id_from_rel(&self, rel_pos: (i32, i32), renderer: &Renderer) -> i32 {
+        let coords = self.get_abs_from_rel(rel_pos, &renderer);
+        let tile_id = self.world.get(&coords).unwrap();
+        let tile = self.tiles.get(&tile_id).unwrap();
+        return tile.id;
+    }
+
     // Gets tile id based off elevation (created by noise)
     fn get_tile(&self, e: f64) -> i32 {
         if e < 0.3 {
@@ -135,7 +173,7 @@ impl World {
     }
 
     //Generates a random tile id from the tilemap
-    pub fn random_tile_id(&mut self) -> i32 {
+    pub fn get_random_tile_id(&mut self) -> i32 {
         let id: i32 = self.rng.gen_range(0..(self.tiles.len() as i32 - 1));
         return id;
     }
@@ -144,7 +182,7 @@ impl World {
     pub fn random_load_debug(&mut self, x: (i32, i32), y: (i32, i32)) {
         for i in x.0..x.1 {
             for j in y.0..y.1 {
-                let id = self.random_tile_id();
+                let id = self.get_random_tile_id();
                 self.world.insert((i, j), id);
             }
         }

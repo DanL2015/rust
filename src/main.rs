@@ -9,6 +9,7 @@ mod renderer;
 use renderer::renderer::Renderer;
 mod player;
 use player::player::Player;
+mod gui;
 
 pub fn main() {
     let screen_area = (800, 600);
@@ -56,6 +57,7 @@ pub fn main() {
         world
             .player
             .input(&keys_pressed, &world.world, &world.tiles, render.tile_size);
-        render.render(&mut canvas, &mut world, &font, &texture_creator);
+        let m_coords = (event_queue.mouse_state().x(), event_queue.mouse_state().y());
+        render.render(&mut canvas, &mut world, &font, &texture_creator, m_coords);
     }
 }
