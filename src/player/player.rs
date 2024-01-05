@@ -1,4 +1,4 @@
-use sdl2::{keyboard::Keycode, pixels::Color, render::Canvas, video::Window};
+use sdl2::{keyboard::{Keycode, Scancode, Mod}, pixels::Color, render::Canvas, video::Window};
 use std::collections::{HashMap, HashSet};
 
 use crate::world::world::Tile;
@@ -7,7 +7,12 @@ pub struct Player {
     pub pos: (f64, f64),
     pub color: Color,
     pub size: (u32, u32),
+    pub health: i32,
+    pub stamina: i32,
+    pub hunger: i32,
     mv_mult: f64,
+    walk_mult: f64,
+    sprint_mult: f64,
 }
 
 impl Player {
@@ -16,7 +21,12 @@ impl Player {
             pos: (25.0, 25.0),
             color: Color::BLACK,
             size: (20, 20),
-            mv_mult: 0.05,
+            health: 100,
+            stamina: 100,
+            hunger: 100,
+            mv_mult: 3.0,
+            walk_mult: 3.0,
+            sprint_mult: 5.0,
         }
     }
 
@@ -102,6 +112,11 @@ impl Player {
         tiles: &HashMap<i32, Tile>,
         tile_size: i32,
     ) {
+        if keys_pressed.get(&Keycode::LShift).is_some() {
+            self.mv_mult = self.sprint_mult;
+        } else {
+            self.mv_mult = self.walk_mult;
+        }
         if keys_pressed.get(&Keycode::W).is_some() {
             self.mv((0.0, -1.0), world, tiles, tile_size);
         }

@@ -1,7 +1,7 @@
 extern crate sdl2;
-use std::{collections::HashSet, path::Path};
+use std::{collections::HashSet, path::Path, time::Duration};
 
-use sdl2::{event::Event, keyboard::Keycode};
+use sdl2::{event::Event, keyboard::{Keycode, Mod}, TimerSubsystem};
 
 mod world;
 use world::world::World;
@@ -59,5 +59,6 @@ pub fn main() {
             .input(&keys_pressed, &world.world, &world.tiles, render.tile_size);
         let m_coords = (event_queue.mouse_state().x(), event_queue.mouse_state().y());
         render.render(&mut canvas, &mut world, &font, &texture_creator, m_coords);
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 30));
     }
 }
