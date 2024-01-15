@@ -21,7 +21,16 @@ pub struct World {
     pub rng: ThreadRng,
     pub player: Player,
     pub noise: Perlin,
+    pub tree_gap: HashMap<i32, i32>, //Gaps based on biome (tile id)
     scale: f64,
+}
+
+fn init_tree_gap(tree_gap: &mut HashMap<i32, i32>) {
+    tree_gap.insert(0, 2); //Grass
+    tree_gap.insert(1, 3); //Dirt
+    tree_gap.insert(2, -1); //Water
+    tree_gap.insert(3, 8); //Sand
+    tree_gap.insert(4, 6); //Snow
 }
 
 fn init_tiles(tiles: &mut HashMap<i32, Tile>) {
@@ -85,6 +94,16 @@ fn init_tiles(tiles: &mut HashMap<i32, Tile>) {
             solid: false,
         },
     );
+    tiles.insert(
+        5,
+        Tile {
+            name: "Tree".to_string(),
+            id: 5,
+            color: Color::RGB(248, 223, 161), //birch color
+            symbol: 'T',
+            solid: true,
+        },
+    );
 }
 
 impl World {
@@ -92,29 +111,28 @@ impl World {
         let mut tiles = HashMap::new();
         init_tiles(&mut tiles);
 
+        let mut tree_gap = HashMap::new();
+        init_tree_gap(&mut tree_gap);
+
         return Self {
             world: HashMap::new(),
             tiles: tiles,
             rng: rand::thread_rng(),
             player: player,
             noise: Perlin::new(1),
+            tree_gap: tree_gap,
             scale: 0.05,
         };
     }
 
     // Creates noise from x and y coords
-    fn get_noise(&self, x: i32, y: i32) -> f64 {
-        let val: f64 = self
-            .noise
-            .get([x as f64 * self.scale, y as f64 * self.scale])
-            / 2.0
-            + 0.5;
+    fn get_noise(&self, x: f64, y: f64) -> f64 {
+        let val: f64 = self.noise.get([x + 0.01, y + 0.01]) / 2.0 + 0.5;
         return val;
     }
 
     // Gets absolute world coords from relative coords (on screen) using player position
     pub fn get_abs_from_rel(&self, rel_pos: (i32, i32), renderer: &Renderer) -> (i32, i32) {
-
         let hx = (renderer.screen_area.w as i32 / renderer.tile_size) / 2;
         let hy = (renderer.screen_area.h as i32 / renderer.tile_size) / 2;
 
@@ -136,7 +154,10 @@ impl World {
         let so: (i32, i32) = ((prt.0.floor() as i32), (prt.1.floor() as i32));
 
         // relative tile position
-        let rt = ((rel_pos.0 - so.0) / renderer.tile_size, (rel_pos.1 - so.1) / renderer.tile_size);
+        let rt = (
+            (rel_pos.0 - so.0) / renderer.tile_size,
+            (rel_pos.1 - so.1) / renderer.tile_size,
+        );
 
         // get absolute world coords
         return (pt.0 + rt.0 - hx, pt.1 + rt.1 - hy);
@@ -166,10 +187,32 @@ impl World {
 
     //Uses Perlin noise to generate tile and insert into map (careful, this may override already existing tiles!)
     pub fn generate_tile(&mut self, x: i32, y: i32) {
+        let fx = x as f64 * self.scale;
+        let fy = y as f64 * self.scale;
         let value =
-            (self.get_noise(x, y) + 0.5 * self.get_noise(x, y) + 0.25 * self.get_noise(x, y))
+            (self.get_noise(fx, fy) + 0.5 * self.get_noise(fx, fy) + 0.25 * self.get_noise(fx, fy))
                 / (1.0 + 0.5 + 0.25);
-        self.world.insert((x, y), self.get_tile(value));
+        let n_tile = self.get_tile(value);
+        let tree_gap = *self.tree_gap.get(&n_tile).unwrap();
+
+        //Check for tree generation
+        let mut max: f64 = 0.0;
+        for dx in -tree_gap..tree_gap {
+            for dy in -tree_gap..tree_gap {
+                let xn: i32 = dx + x;
+                let yn: i32 = dy + y;
+                let e: f64 = self.get_noise(50.0 * xn as f64, 50.0 * yn as f64);
+                if e > max {
+                    max = e;
+                };
+            }
+        }
+
+        if tree_gap > 0 && self.get_noise(50.0 * x as f64, 50.0 * y as f64) == max {
+            self.world.insert((x, y), 5);
+        } else {
+            self.world.insert((x, y), self.get_tile(value));
+        }
     }
 
     //Generates a random tile id from the tilemap
